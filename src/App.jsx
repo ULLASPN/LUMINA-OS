@@ -255,6 +255,7 @@ export default function App() {
   const [musicTrack, setMusicTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
+  const [pendingUrl, setPendingUrl] = useState(null);
   const [systemState, setSystemState] = useState('online'); 
   const [isLocked, setIsLocked] = useState(true);
   const videoRef = useRef(null);
@@ -334,11 +335,24 @@ export default function App() {
     window.speechSynthesis.speak(utterance);
   };
 
-  const respond = (text) => {
+  const respond = (text, url = null) => {
     setAiResponse(text);
+    setPendingUrl(url);
     addLog(`AI: ${text}`);
-    speak(text); // JARVIS will now talk back!
-    setTimeout(() => setAiResponse(''), 3000);
+    speak(text); 
+    
+    if (url) {
+      // Attempt automatic open (might be blocked)
+      const win = window.open(url, '_blank');
+      if (!win) {
+        addLog("System: Popup blocked. Please use manual launch button.");
+      }
+    }
+
+    setTimeout(() => {
+      setAiResponse('');
+      setPendingUrl(null);
+    }, 5000); // Keep open longer for manual click if blocked
   };
 
   const handleVoiceCommand = (rawCmd) => {
@@ -361,26 +375,19 @@ export default function App() {
     
     // Web Navigation
     if (cmd.includes('open youtube')) {
-      respond('Opening YouTube.');
-      window.open(COMMANDS.YOUTUBE, '_blank');
+      respond('Opening YouTube.', COMMANDS.YOUTUBE);
     } else if (cmd.includes('open google')) {
-      respond('Opening Google Search.');
-      window.open(COMMANDS.GOOGLE, '_blank');
+      respond('Opening Google Search.', COMMANDS.GOOGLE);
     } else if (cmd.includes('open spotify')) {
-      respond('Launching Spotify.');
-      window.open(COMMANDS.SPOTIFY, '_blank');
+      respond('Launching Spotify.', COMMANDS.SPOTIFY);
     } else if (cmd.includes('open github')) {
-      respond('Accessing GitHub repositories.');
-      window.open(COMMANDS.GITHUB, '_blank');
+      respond('Accessing GitHub repositories.', COMMANDS.GITHUB);
     } else if (cmd.includes('open netflix')) {
-      respond('Initiating Netflix.');
-      window.open(COMMANDS.NETFLIX, '_blank');
+      respond('Initiating Netflix.', COMMANDS.NETFLIX);
     } else if (cmd.includes('open chatgpt')) {
-      respond('Connecting to AI Neural Link.');
-      window.open(COMMANDS.CHATGPT, '_blank');
+      respond('Connecting to AI Neural Link.', COMMANDS.CHATGPT);
     } else if (cmd.includes('open calculator')) {
-      respond('Opening System Calculator.');
-      window.open(COMMANDS.CALCULATOR, '_blank');
+      respond('Opening System Calculator.', COMMANDS.CALCULATOR);
     }
     
     // System Commands
@@ -402,25 +409,21 @@ export default function App() {
     
     // Music Commands
     else if (cmd.includes('play believer')) {
-      respond('Playing Believer by Imagine Dragons.');
       setMusicTrack('Believer - Imagine Dragons');
       setIsPlaying(true);
-      window.open(MUSIC_TRACKS.BELIEVER, '_blank');
+      respond('Playing Believer by Imagine Dragons.', MUSIC_TRACKS.BELIEVER);
     } else if (cmd.includes('play relaxing music')) {
-      respond('Playing soothing ambient tracks.');
       setMusicTrack('Ambient Meditations');
       setIsPlaying(true);
-      window.open(MUSIC_TRACKS.RELAXING, '_blank');
+      respond('Playing soothing ambient tracks.', MUSIC_TRACKS.RELAXING);
     } else if (cmd.includes('play lo-fi beats')) {
-      respond('Playing Lo-Fi Study Beats.');
       setMusicTrack('Lofi Hip Hop Radio');
       setIsPlaying(true);
-      window.open(MUSIC_TRACKS['LO-FI'], '_blank');
+      respond('Playing Lo-Fi Study Beats.', MUSIC_TRACKS['LO-FI']);
     } else if (cmd.includes('play cinematic music')) {
-      respond('Playing Orchestral Epic tracks.');
       setMusicTrack('Cinematic Masterpieces');
       setIsPlaying(true);
-      window.open(MUSIC_TRACKS.CINEMATIC, '_blank');
+      respond('Playing Orchestral Epic tracks.', MUSIC_TRACKS.CINEMATIC);
     } else if (cmd.includes('pause music') || cmd.includes('stop music')) {
       respond('Music playback suspended.');
       setIsPlaying(false);
@@ -534,11 +537,23 @@ export default function App() {
                   initial={{ opacity: 0, scale: 0.8, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 1.1, y: -20 }}
-                  className="absolute bottom-1/4 glass-panel px-8 py-4 neon-border-cyan"
+                  className="absolute bottom-1/4 glass-panel px-8 py-4 neon-border-cyan flex flex-col items-center gap-4"
                 >
                   <p className="text-xl font-medium text-cyan-300 neon-text-cyan tracking-wide italic">
                     "{aiResponse}"
                   </p>
+                  {pendingUrl && (
+                    <motion.a 
+                      href={pendingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="px-6 py-2 bg-cyan-500/20 border border-cyan-400 text-cyan-400 text-xs font-bold uppercase tracking-widest rounded-full hover:bg-cyan-500 hover:text-white transition-all pointer-events-auto"
+                    >
+                      Click to Launch App
+                    </motion.a>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
