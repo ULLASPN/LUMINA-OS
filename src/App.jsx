@@ -310,9 +310,25 @@ export default function App() {
 
   const addLog = (msg) => setCommandLog(prev => [msg, ...prev].slice(0, 50));
 
+  const speak = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 0.95;
+    
+    // Voices load asynchronously in some browsers
+    const voices = window.speechSynthesis.getVoices();
+    const jarvisVoice = voices.find(v => v.name.includes('English') && (v.name.includes('Male') || v.name.includes('UK')));
+    if (jarvisVoice) utterance.voice = jarvisVoice;
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
   const respond = (text) => {
     setAiResponse(text);
     addLog(`AI: ${text}`);
+    speak(text); // JARVIS will now talk back!
     setTimeout(() => setAiResponse(''), 3000);
   };
 
