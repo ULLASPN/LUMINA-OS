@@ -221,7 +221,7 @@ const StartupSequence = ({ onComplete }) => {
             transition={{ delay: 0.5 }}
             className="text-3xl font-black tracking-tighter text-cyan-400 neon-text-cyan"
           >
-            LUMINA
+            JARVIS
           </motion.h1>
           <motion.div 
             initial={{ width: 0 }}
@@ -242,7 +242,7 @@ export default function App() {
   const [booted, setBooted] = useState(false);
   const [dreamMode, setDreamMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [commandLog, setCommandLog] = useState(['LUMINA OS Online', 'Awaiting command...']);
+  const [commandLog, setCommandLog] = useState(['JARVIS OS Online', 'Awaiting command...']);
   const [musicTrack, setMusicTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
@@ -308,8 +308,23 @@ export default function App() {
     setTimeout(() => setAiResponse(''), 3000);
   };
 
-  const handleVoiceCommand = (cmd) => {
-    addLog(`> ${cmd}`);
+  const handleVoiceCommand = (rawCmd) => {
+    let cmd = rawCmd.toLowerCase();
+    
+    // Check for "Jarvis" wake word or prefix
+    if (cmd.includes('jarvis')) {
+      cmd = cmd.replace('jarvis', '').trim();
+    } else {
+      // If the user didn't say Jarvis, we ignore it or just log it as background noise
+      // For this demo, let's allow it but prefix the log
+    }
+
+    addLog(`> ${rawCmd}`);
+    
+    if (cmd === "") {
+      respond("Yes, sir? How can I help you?");
+      return;
+    }
     
     // Web Navigation
     if (cmd.includes('open youtube')) {
@@ -430,7 +445,7 @@ export default function App() {
                 <span className="font-black text-xl text-cyan-400">L</span>
               </div>
               <div>
-                <h1 className="text-2xl font-black tracking-widest text-cyan-400 neon-text-cyan">LUMINA OS</h1>
+                <h1 className="text-2xl font-black tracking-widest text-cyan-400 neon-text-cyan">JARVIS</h1>
                 <p className="text-[10px] font-mono text-cyan-600/80 tracking-[0.2em]">KINETIC NEURAL INTERFACE v2.0</p>
               </div>
             </motion.div>
