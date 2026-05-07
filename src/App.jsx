@@ -279,49 +279,9 @@ export default function App() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Hand Gesture Detection Setup
+  // Hand Gesture Detection (Disabled for Manual Demo)
   useEffect(() => {
-    if (!videoRef.current) return;
-
-    const hands = new Hands({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7
-    });
-
-    hands.onResults((results) => {
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
-        
-        // Easy Logic: Detect if the hand is OPEN (High Five)
-        // Check if fingers 8, 12, 16, 20 are all above their knuckles
-        const isOpenPalm = landmarks[8].y < landmarks[6].y && 
-                          landmarks[12].y < landmarks[10].y && 
-                          landmarks[16].y < landmarks[14].y && 
-                          landmarks[20].y < landmarks[18].y;
-
-        if (isOpenPalm && isLocked) {
-          setIsLocked(false);
-          respond("Biometric scan complete. Welcome back, sir.");
-        }
-      }
-    });
-
-    const camera = new Camera(videoRef.current, {
-      onFrame: async () => {
-        await hands.send({ image: videoRef.current });
-      },
-      width: 640,
-      height: 480
-    });
-    camera.start();
-
-    return () => camera.stop();
+    // MediaPipe detection removed for stable manual demo
   }, [isLocked]);
 
   // Voice Recognition Setup
@@ -718,20 +678,21 @@ export default function App() {
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-0 border-2 border-dashed border-cyan-500/30 rounded-full"
               />
-              <motion.div 
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-48 h-48 border-4 border-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(6,182,212,0.3)]"
+              <motion.button 
+                whileHover={{ scale: 1.1, rotate: 10 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => { setIsLocked(false); respond("Biometric scan complete. Welcome back, sir."); }}
+                className="w-48 h-48 border-4 border-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(6,182,212,0.5)] bg-cyan-500/10 pointer-events-auto cursor-pointer"
               >
                 <div className="text-6xl animate-pulse">👋</div>
-              </motion.div>
+              </motion.button>
             </div>
             
             <h2 className="mt-12 text-2xl font-black tracking-[0.3em] text-cyan-400 neon-text-cyan">
               BIOMETRIC LOCK ACTIVE
             </h2>
             <p className="mt-4 text-cyan-600 font-mono text-sm uppercase tracking-widest animate-pulse">
-              SHOW OPEN PALM TO UNLOCK JARVIS
+              TAP SENSOR TO UNLOCK JARVIS
             </p>
 
             <button 
