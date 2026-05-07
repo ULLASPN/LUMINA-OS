@@ -298,16 +298,14 @@ export default function App() {
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
         
-        // Thumbs Up Logic:
-        // 1. Thumb tip (4) is higher (smaller Y) than index base (5)
-        // 2. Other finger tips (8, 12, 16, 20) are lower than their respective bases
-        const isThumbUp = landmarks[4].y < landmarks[3].y && landmarks[4].y < landmarks[5].y;
-        const isFingersClosed = landmarks[8].y > landmarks[6].y && 
-                               landmarks[12].y > landmarks[10].y && 
-                               landmarks[16].y > landmarks[14].y && 
-                               landmarks[20].y > landmarks[18].y;
+        // Easy Logic: Detect if the hand is OPEN (High Five)
+        // Check if fingers 8, 12, 16, 20 are all above their knuckles
+        const isOpenPalm = landmarks[8].y < landmarks[6].y && 
+                          landmarks[12].y < landmarks[10].y && 
+                          landmarks[16].y < landmarks[14].y && 
+                          landmarks[20].y < landmarks[18].y;
 
-        if (isThumbUp && isFingersClosed && isLocked) {
+        if (isOpenPalm && isLocked) {
           setIsLocked(false);
           respond("Biometric scan complete. Welcome back, sir.");
         }
@@ -725,7 +723,7 @@ export default function App() {
                 transition={{ duration: 2, repeat: Infinity }}
                 className="w-48 h-48 border-4 border-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(6,182,212,0.3)]"
               >
-                <div className="text-6xl animate-bounce">👍</div>
+                <div className="text-6xl animate-pulse">👋</div>
               </motion.div>
             </div>
             
@@ -733,8 +731,15 @@ export default function App() {
               BIOMETRIC LOCK ACTIVE
             </h2>
             <p className="mt-4 text-cyan-600 font-mono text-sm uppercase tracking-widest animate-pulse">
-              SHOW THUMBS UP TO UNLOCK JARVIS
+              SHOW OPEN PALM TO UNLOCK JARVIS
             </p>
+
+            <button 
+              onClick={() => { setIsLocked(false); respond("Manual override accepted."); }}
+              className="mt-8 px-4 py-2 border border-cyan-900 text-[10px] text-cyan-800 hover:text-cyan-400 transition-all pointer-events-auto"
+            >
+              [ MANUAL OVERRIDE ]
+            </button>
 
             {/* Hidden Video for Detection */}
             <video ref={videoRef} className="hidden" playsInline muted />
