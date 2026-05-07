@@ -18,9 +18,9 @@
     "@react-three/drei": "^9.99.5",
     "@react-three/postprocessing": "^2.16.0",
     "postprocessing": "^6.35.0",
-    "@mediapipe/hands": "^0.4.1646424915",
-    "@mediapipe/camera_utils": "^0.4.1646424315",
-    "@mediapipe/drawing_utils": "^0.4.1646424515"
+    "@mediapipe/hands": "latest",
+    "@mediapipe/camera_utils": "latest",
+    "@mediapipe/drawing_utils": "latest"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",
