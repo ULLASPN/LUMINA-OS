@@ -8,12 +8,11 @@ import {
   Text, 
   PresentationControls,
   PerspectiveCamera,
-  Bloom,
-  EffectComposer,
   Environment,
   OrbitControls,
   MeshWobbleMaterial
 } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
