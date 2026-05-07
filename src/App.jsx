@@ -35,6 +35,13 @@ const MUSIC_TRACKS = {
   'CINEMATIC': 'https://www.youtube.com/results?search_query=cinematic+music',
 };
 
+const CONTACTS = {
+  "ullas": "+916361258145",
+  "aryan": "+919142817966",
+  "akshata": "+919980965961",
+  "ganesh": "+918197900121"
+};
+
 // --- 3D Components ---
 
 const ParticleField = ({ count = 2000, dreamMode }) => {
@@ -246,6 +253,7 @@ export default function App() {
   const [musicTrack, setMusicTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
+  const [systemState, setSystemState] = useState('online'); // 'online', 'shutdown', 'restarting'
   
   // Cursor Trail
   const cursorRef = useRef(null);
@@ -391,7 +399,33 @@ export default function App() {
     } else if (cmd.includes('pause music') || cmd.includes('stop music')) {
       respond('Music playback suspended.');
       setIsPlaying(false);
-    } else {
+    } 
+    
+    // WhatsApp Messaging
+    else if (cmd.includes('message')) {
+      const contactName = Object.keys(CONTACTS).find(name => cmd.includes(name));
+      if (contactName) {
+        const phone = CONTACTS[contactName];
+        respond(`Opening WhatsApp to message ${contactName}.`);
+        window.open(`https://web.whatsapp.com/send?phone=${phone}`, '_blank');
+      } else {
+        respond("Contact not found in neural database.");
+      }
+    }
+
+    // System Controls (Cinematic Simulation)
+    else if (cmd.includes('shutdown')) {
+      respond("Initiating full system shutdown. Goodbye, sir.");
+      setTimeout(() => setSystemState('shutdown'), 2000);
+    } else if (cmd.includes('restart')) {
+      respond("Rebooting JARVIS core systems.");
+      setTimeout(() => {
+        setSystemState('restarting');
+        setTimeout(() => window.location.reload(), 3000);
+      }, 2000);
+    }
+    
+    else {
       respond("Command recognized. Executing...");
     }
   };
@@ -570,6 +604,41 @@ export default function App() {
       {/* Scanning Effect Overlay */}
       <div className="scanline" />
       <div className="fixed inset-0 pointer-events-none hologram-grid opacity-20" />
+
+      {/* Shutdown Overlay */}
+      <AnimatePresence>
+        {systemState !== 'online' && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center"
+          >
+            <motion.div 
+              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-cyan-500 font-mono text-xl tracking-[0.5em]"
+            >
+              {systemState === 'shutdown' ? 'SYSTEM SHUTDOWN' : 'REBOOTING SYSTEM...'}
+            </motion.div>
+            <div className="mt-8 w-64 h-1 bg-cyan-900 overflow-hidden">
+              <motion.div 
+                initial={{ x: '-100%' }}
+                animate={{ x: '100%' }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                className="w-full h-full bg-cyan-400"
+              />
+            </div>
+            {systemState === 'shutdown' && (
+              <button 
+                onClick={() => setSystemState('online')}
+                className="mt-12 text-xs text-cyan-800 hover:text-cyan-400 transition-colors pointer-events-auto"
+              >
+                [ EMERGENCY OVERRIDE ]
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
