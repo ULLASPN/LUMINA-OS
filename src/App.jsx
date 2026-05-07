@@ -16,6 +16,8 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
+import { Hands } from '@mediapipe/hands';
+import { Camera } from '@mediapipe/camera_utils';
 
 // --- Constants & Commands ---
 const COMMANDS = {
@@ -253,7 +255,9 @@ export default function App() {
   const [musicTrack, setMusicTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
-  const [systemState, setSystemState] = useState('online'); // 'online', 'shutdown', 'restarting'
+  const [systemState, setSystemState] = useState('online'); 
+  const [isLocked, setIsLocked] = useState(true);
+  const videoRef = useRef(null);
   
   // Cursor Trail
   const cursorRef = useRef(null);
@@ -274,6 +278,53 @@ export default function App() {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  // Hand Gesture Detection Setup
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.7
+    });
+
+    hands.onResults((results) => {
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        
+        // Thumbs Up Logic:
+        // 1. Thumb tip (4) is higher (smaller Y) than index base (5)
+        // 2. Other finger tips (8, 12, 16, 20) are lower than their respective bases
+        const isThumbUp = landmarks[4].y < landmarks[3].y && landmarks[4].y < landmarks[5].y;
+        const isFingersClosed = landmarks[8].y > landmarks[6].y && 
+                               landmarks[12].y > landmarks[10].y && 
+                               landmarks[16].y > landmarks[14].y && 
+                               landmarks[20].y > landmarks[18].y;
+
+        if (isThumbUp && isFingersClosed && isLocked) {
+          setIsLocked(false);
+          respond("Biometric scan complete. Welcome back, sir.");
+        }
+      }
+    });
+
+    const camera = new Camera(videoRef.current, {
+      onFrame: async () => {
+        await hands.send({ image: videoRef.current });
+      },
+      width: 640,
+      height: 480
+    });
+    camera.start();
+
+    return () => camera.stop();
+  }, [isLocked]);
 
   // Voice Recognition Setup
   const recognition = useMemo(() => {
@@ -442,7 +493,8 @@ export default function App() {
     }
     
     else {
-      respond("Command recognized. Executing...");
+      // Stay silent for unknown commands or just log them
+      addLog(`System: Unknown command structure detected.`);
     }
   };
 
@@ -652,6 +704,40 @@ export default function App() {
                 [ EMERGENCY OVERRIDE ]
               </button>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Lock Screen Overlay */}
+      <AnimatePresence>
+        {isLocked && booted && (
+          <motion.div 
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center"
+          >
+            <div className="relative w-80 h-80 flex items-center justify-center">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 border-2 border-dashed border-cyan-500/30 rounded-full"
+              />
+              <motion.div 
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-48 h-48 border-4 border-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(6,182,212,0.3)]"
+              >
+                <div className="text-6xl animate-bounce">👍</div>
+              </motion.div>
+            </div>
+            
+            <h2 className="mt-12 text-2xl font-black tracking-[0.3em] text-cyan-400 neon-text-cyan">
+              BIOMETRIC LOCK ACTIVE
+            </h2>
+            <p className="mt-4 text-cyan-600 font-mono text-sm uppercase tracking-widest animate-pulse">
+              SHOW THUMBS UP TO UNLOCK JARVIS
+            </p>
+
+            {/* Hidden Video for Detection */}
+            <video ref={videoRef} className="hidden" playsInline muted />
           </motion.div>
         )}
       </AnimatePresence>
